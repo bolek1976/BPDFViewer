@@ -19,7 +19,6 @@
 #import "PDFKPageContentView.h"
 #import "PDFKBasicPDFViewerThumbsCollectionView.h"
 #import "PDFKBasicPDFViewerSinglePageCollectionView.h"
-#import <TTOpenInAppActivity/TTOpenInAppActivity.h>
 
 
 @interface PDFKBasicPDFViewer () <UIToolbarDelegate, UIDocumentInteractionControllerDelegate, PDFKPageScrubberDelegate, UIGestureRecognizerDelegate, PDFKBasicPDFViewerThumbsCollectionViewDelegate, PDFKBasicPDFViewerSinglePageCollectionViewDelegate>
@@ -280,7 +279,7 @@
         }
         
         //Sharing Button
-        if (_enableSharing || _enablePrinting || _enableOpening) {
+        if (_enableSharing || _enablePrinting) {
             UIBarButtonItem *space = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFixedSpace target:nil action:nil];
             space.width = 10.0;
             [buttonsArray addObject:space];
@@ -336,14 +335,9 @@
 
 - (void)send
 {
-    UIActivityViewController *activityViewController;
-    TTOpenInAppActivity *openInAppActivity;
-    if (_enableOpening) {
-        openInAppActivity = [[TTOpenInAppActivity alloc] initWithView:self.view andBarButtonItem:_shareItem];
-        activityViewController = [[UIActivityViewController alloc] initWithActivityItems:@[_document.fileURL] applicationActivities:@[openInAppActivity]];
-    } else {
-        activityViewController = [[UIActivityViewController alloc] initWithActivityItems:@[_document.fileURL] applicationActivities:nil];
-    }
+    UIActivityViewController *activityViewController = [[UIActivityViewController alloc]
+                                                        initWithActivityItems:@[_document.fileURL]
+                                                        applicationActivities:nil];
     
     if (!_enablePrinting) {
         activityViewController.excludedActivityTypes = @[UIActivityTypePrint, UIActivityTypeCopyToPasteboard];
@@ -357,19 +351,12 @@
     }
     
     if([UIDevice currentDevice].userInterfaceIdiom == UIUserInterfaceIdiomPhone){
-        // Store reference to superview (UIActionSheet) to allow dismissal
-        if (openInAppActivity) {
-            openInAppActivity.superViewController = activityViewController;
-        }
         // Show UIActivityViewController
         [self presentViewController:activityViewController animated:YES completion:NULL];
     } else {
         // Create pop up
         self.activityPopoverController = [[UIPopoverController alloc] initWithContentViewController:activityViewController];
-        // Store reference to superview (UIPopoverController) to allow dismissal
-        if (openInAppActivity) {
-            openInAppActivity.superViewController = self.activityPopoverController;
-        }
+
         // Show UIActivityViewController in popup
         [self.activityPopoverController presentPopoverFromBarButtonItem:_shareItem permittedArrowDirections:UIPopoverArrowDirectionAny animated:YES];
     }

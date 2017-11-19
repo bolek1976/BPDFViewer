@@ -67,10 +67,7 @@ typedef void (^PDFKBasicPDFViewerPageChangeBlock)(NSUInteger page);
  Wether or not to enable printinh of the PDF.
  */
 @property (nonatomic, assign) BOOL enablePrinting;
-/**
- Wether or not to allow opening of the file in other apps.
- */
-@property (nonatomic, assign) BOOL enableOpening;
+
 /**
  Wether or not to show the thumbnail slider at the bottom of the screen.
  */

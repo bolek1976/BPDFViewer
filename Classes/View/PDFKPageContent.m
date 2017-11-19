@@ -559,9 +559,10 @@
 	CGContextFillRect(context, CGContextGetClipBoundingBox(context));
     
     //Translate for Page
-	CGContextTranslateCTM(context, 0.0f, self.bounds.size.height); CGContextScaleCTM(context, 1.0f, -1.0f);
-	CGContextConcatCTM(context, CGPDFPageGetDrawingTransform(_PDFPageRef, kCGPDFCropBox, self.bounds, 0, true));
-    
+    dispatch_sync(dispatch_get_main_queue(), ^{
+	 CGContextTranslateCTM(context, 0.0f, self.bounds.size.height); CGContextScaleCTM(context, 1.0f, -1.0f);
+	 CGContextConcatCTM(context, CGPDFPageGetDrawingTransform(_PDFPageRef, kCGPDFCropBox, self.bounds, 0, true));
+    });
     //Render the PDF page into the context
 	CGContextDrawPDFPage(context, _PDFPageRef);
     

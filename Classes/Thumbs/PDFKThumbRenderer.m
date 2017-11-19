@@ -59,7 +59,7 @@
     //Get the path for the cache
 	NSFileManager *fileManager = [NSFileManager new];
 	NSString *cachePath = [PDFKThumbCache thumbCachePathForGUID:_request.guid];
-    [fileManager createDirectoryAtPath:cachePath withIntermediateDirectories:NO attributes:nil error:NULL];
+    [fileManager createDirectoryAtPath:cachePath withIntermediateDirectories:YES attributes:nil error:NULL];
 	NSString *fileName = [NSString stringWithFormat:@"%@.png", _request.thumbName];
     //Assemble the url
 	return [NSURL fileURLWithPath:[cachePath stringByAppendingPathComponent:fileName]];
@@ -201,7 +201,7 @@
         
         //Save the thumb to file.
 		CFURLRef thumbURL = (__bridge CFURLRef)[self thumbFileURL];
-		CGImageDestinationRef thumbRef = CGImageDestinationCreateWithURL(thumbURL, (CFStringRef)@"public.png", 1, NULL);
+		CGImageDestinationRef thumbRef = CGImageDestinationCreateWithURL(thumbURL, (CFStringRef)@"public.jpeg", 1, NULL);
         
 		if (thumbRef != NULL)
 		{
