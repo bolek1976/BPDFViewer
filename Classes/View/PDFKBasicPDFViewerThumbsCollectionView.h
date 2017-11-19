@@ -46,12 +46,7 @@
  @param page The page to scroll to.
  */
 - (void)scrollToPage:(NSUInteger)page;
-/**
- Set wether or not to show only bookmarked pages.
- 
- @param show Set to YES to show only bookmarked pages.
- */
-- (void)showBookmarkedPages:(BOOL)show;
+
 /**
  The delegate that responds to page selection.
  */
@@ -69,16 +64,7 @@
  The label that displays the page number while the thumb is loading.
  */
 @property (nonatomic, strong, readonly) UILabel *pageNumberLabel;
-/**
- The image view that displays the bookmark image.
- */
-@property (nonatomic, strong, readonly) UIImageView *bookmarkView;
-/**
- Wether or not the page is bookmarked.
- 
- @param show If YES, a bookmark will be displayed.
- */
-- (void)showBookmark:(BOOL)show;
+
 
 
 @end

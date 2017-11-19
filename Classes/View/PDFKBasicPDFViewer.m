@@ -23,7 +23,7 @@
 
 @interface PDFKBasicPDFViewer () <UIToolbarDelegate, UIDocumentInteractionControllerDelegate, PDFKPageScrubberDelegate, UIGestureRecognizerDelegate, PDFKBasicPDFViewerThumbsCollectionViewDelegate, PDFKBasicPDFViewerSinglePageCollectionViewDelegate>
 
-@property (nonatomic, retain, readwrite) UIToolbar *navigationToolbar;
+//@property (nonatomic, retain, readwrite) UIToolbar *navigationToolbar;
 @property (nonatomic, retain, readwrite) UIToolbar *thumbnailSlider;
 @property (nonatomic, strong, readwrite) UIPopoverController *activityPopoverController;
 @property (nonatomic, strong, readwrite) UIBarButtonItem *shareItem;
@@ -108,19 +108,8 @@
     [pageConstraints addObjectsFromArray:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|[collectionView]|" options:NSLayoutFormatAlignAllLeft metrics:nil views:@{@"superview": self.view, @"collectionView": _pageCollectionView}]];
     [self.view addConstraints:pageConstraints];
     
-    //Create the navigation bar.
-    _navigationToolbar = [[UIToolbar alloc] initWithFrame:CGRectMake(0, 0, self.view.frame.size.width, 44.0)];
-    _navigationToolbar.delegate = self;
-    //Set this to no, cant have autoresizing masks and layout constraints at the same time.
-    _navigationToolbar.translatesAutoresizingMaskIntoConstraints = NO;
-    //Add to the view
-    [self.view addSubview:_navigationToolbar];
-    //Create the constraints.
-    NSMutableArray *navigationToolbarConstraints = [[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[toolbar]|" options:NSLayoutFormatAlignAllBaseline metrics:nil views:@{@"superview": self.view, @"toolbar": _navigationToolbar}] mutableCopy];
-    [navigationToolbarConstraints addObjectsFromArray:[NSLayoutConstraint constraintsWithVisualFormat:@"V:[topLayout]-0-[toolbar(44)]" options:NSLayoutFormatAlignAllLeft metrics:nil views:@{@"toolbar": _navigationToolbar, @"topLayout": self.topLayoutGuide}]];
-    [self.view addConstraints:navigationToolbarConstraints];
-    //Finish setup
-    [_navigationToolbar sizeToFit];
+
+
     [self resetNavigationToolbar];
     
     //Create the scrubber
@@ -209,9 +198,7 @@
 
 - (UIBarPosition)positionForBar:(id<UIBarPositioning>)bar
 {
-    if (bar == _navigationToolbar) {
-        return UIBarPositionTop;
-    }
+
     if (bar == _pageScrubber) {
         return UIBarPositionBottom;
     }
@@ -242,10 +229,7 @@
     //Set controls for a single page.
     if (_showingSinglePage) {
         //Done Button
-        if (!_standalone) {
-            [buttonsArray addObject:[[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemDone target:self action:@selector(dismiss)]];
-            [buttonsArray addObject:[[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil]];
-        }
+
         
         //Add space if necessary
         if (buttonsArray.count > 0) {
@@ -289,39 +273,16 @@
     } else {
         
         //Set controls for thumbs
-        //Done Button
-        if (!_standalone) {
-            [buttonsArray addObject:[[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemDone target:self action:@selector(dismiss)]];
-            [buttonsArray addObject:[[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil]];
-        }
-        
+
         //Add space if necessary
         if (buttonsArray.count > 0) {
             UIBarButtonItem *space = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFixedSpace target:nil action:nil];
             space.width = 10.0;
             [buttonsArray addObject:space];
         }
-        
-        //Go back
-        if (!self.backButtonTitle) {
-            self.backButtonTitle = @"Resume";
-        }
-        UIBarButtonItem *listItem = [[UIBarButtonItem alloc] initWithTitle:self.backButtonTitle style:UIBarButtonItemStylePlain target:self action:@selector(list)];
-        [buttonsArray addObject:listItem];
-        
-        //Flexible space
-        [buttonsArray addObject:[[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil]];
-        
-        //Bookmarks
-        UISegmentedControl *control = [[UISegmentedControl alloc] initWithItems:@[[UIImage imageNamed:@"Thumbs"], [UIImage imageNamed:@"Bookmark"]]];
-        [control setSelectedSegmentIndex:(!_showingBookmarks ? 0 : 1)];
-        [control sizeToFit];
-        [control addTarget:self action:@selector(toggleShowBookmarks:) forControlEvents:UIControlEventValueChanged];
-        UIBarButtonItem *bookmarkItem = [[UIBarButtonItem alloc] initWithCustomView:control];
-        [buttonsArray addObject:bookmarkItem];
     }
     
-    [_navigationToolbar setItems:buttonsArray animated:YES];
+    [self.navigationItem setRightBarButtonItems:buttonsArray];
 }
 
 #pragma mark - Actions
@@ -380,15 +341,6 @@
     [self toggleSinglePageView];
 }
 
-- (void)toggleShowBookmarks:(id)sender
-{
-    UISegmentedControl *control = sender;
-    if (control.selectedSegmentIndex == 0) {
-        [_thumbsCollectionView showBookmarkedPages:NO];
-    } else {
-        [_thumbsCollectionView showBookmarkedPages:YES];
-    }
-}
 
 #pragma mark - Page Control
 
@@ -471,8 +423,8 @@
     CGPoint location = [touch locationInView:self.view];
     
     //We want to cancel the toggle gesture if we are on the toolbars while they are visible
-    if (_navigationToolbar.hidden == NO) {
-        if (CGRectContainsPoint(_navigationToolbar.frame, location) || CGRectContainsPoint(_pageScrubber.frame, location)) {
+    if (_pageScrubber.hidden == NO) {
+        if (CGRectContainsPoint(_pageScrubber.frame, location)) {
             return NO;
         }
     }
@@ -524,14 +476,10 @@
 - (void)toggleToolbars
 {
     if (_showingSinglePage ) {
-        if (_navigationToolbar.hidden) {
+        if (_pageScrubber.hidden) {
             //Show toolbars
-            _navigationToolbar.hidden = NO;
             _pageScrubber.hidden = NO;
             [UIView animateWithDuration:0.3 animations:^{
-                if (_navigationToolbar.alpha == 0.0) {
-                    _navigationToolbar.alpha = 1.0;
-                }
                 if (_pageScrubber.alpha == 0.0) {
                     _pageScrubber.alpha = 1.0;
                 }
@@ -539,15 +487,11 @@
         } else {
             //Hide toolbars
             [UIView animateWithDuration:0.3 animations:^{
-                if (_navigationToolbar.alpha == 1.0) {
-                    _navigationToolbar.alpha = 0.0;
-                }
                 if (_pageScrubber.alpha == 1.0) {
                     _pageScrubber.alpha = 0.0;
                 }
             } completion:^(BOOL finished) {
                 if (finished) {
-                    _navigationToolbar.hidden = YES;
                     _pageScrubber.hidden = YES;
                 }
             }];
@@ -560,17 +504,13 @@
     if (_showingSinglePage) {
         //Show the thumbs view.
         _showingSinglePage = NO;
-        [self resetNavigationToolbar];
-        [_thumbsCollectionView showBookmarkedPages:NO];
+        //[self resetNavigationToolbar];
         [_thumbsCollectionView reloadData];
         
         //Hide the slider if showing, show the nav bar if not showing
-        _navigationToolbar.hidden = NO;
         _thumbsCollectionView.hidden = NO;
         [UIView animateWithDuration:0.3 animations:^{
-            if (_navigationToolbar.alpha == 0.0) {
-                _navigationToolbar.alpha = 1.0;
-            }
+            
             if (_pageScrubber.alpha == 1.0) {
                 _pageScrubber.alpha = 0.0;
             }
@@ -583,7 +523,7 @@
         }];
     } else {
         _showingSinglePage = YES;
-        [self resetNavigationToolbar];
+        //[self resetNavigationToolbar];
         _pageScrubber.hidden = NO;
         _pageCollectionView.hidden = NO;
         [UIView animateWithDuration:0.3 animations:^{

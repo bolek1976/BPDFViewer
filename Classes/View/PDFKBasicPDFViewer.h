@@ -76,15 +76,7 @@ typedef void (^PDFKBasicPDFViewerPageChangeBlock)(NSUInteger page);
  Wether or not to allow zooming out of a page to show multiple pages.
  */
 @property (nonatomic, assign) BOOL enablePreview;
-/**
- If false, a done button is added to the toolbar.
- */
-@property (nonatomic, assign) BOOL standalone;
 
-/**
- The toolbar displaied at the top of the screen.
- */
-@property (nonatomic, retain, readonly) UIToolbar *navigationToolbar;
 /**
  The slider at the bottom of the screen to show the thumbnails.
  */

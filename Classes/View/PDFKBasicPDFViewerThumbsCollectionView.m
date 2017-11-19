@@ -26,14 +26,6 @@
  The document to load thumbs from.
  */
 @property (nonatomic, strong) PDFKDocument *document;
-/**
- The array of bookmarked pages to display.
- */
-@property (nonatomic, strong) NSArray *bookmarkedPages;
-/**
- Wether or not we are showing bookmarked pages.
- */
-@property (nonatomic, assign) BOOL showBookmarkedPages;
 
 @end
 
@@ -62,39 +54,8 @@
     return self;
 }
 
-- (void)showBookmarkedPages:(BOOL)show
-{
-    if (show) {
-        NSMutableArray *temp = [NSMutableArray array];
-        
-        [_document.bookmarks enumerateIndexesUsingBlock:^(NSUInteger page, BOOL *stop) {
-             [temp addObject:[NSNumber numberWithInteger:page]];
-         }];
-        
-        _bookmarkedPages = [temp copy];
-        _showBookmarkedPages = YES;
-        [self reloadData];
-    } else {
-        _showBookmarkedPages = NO;
-        [self reloadData];
-    }
-}
 
-- (void)scrollToPage:(NSUInteger)page
-{
-    if (!_showBookmarkedPages) {
-        //The index path can just be based on the page number.
-        NSIndexPath *indexPath = [NSIndexPath indexPathForItem:(page - 1) inSection:0];
-        [self scrollToItemAtIndexPath:indexPath atScrollPosition:UICollectionViewScrollPositionCenteredHorizontally animated:YES];
-    } else {
-        NSInteger location = [_bookmarkedPages indexOfObject:[NSNumber numberWithUnsignedInteger:page]];
-        //If it is a bookmarked page.
-        if (location != NSNotFound) {
-            NSIndexPath *indexPath = [NSIndexPath indexPathForItem:location inSection:0];
-            [self scrollToItemAtIndexPath:indexPath atScrollPosition:UICollectionViewScrollPositionCenteredHorizontally animated:YES];
-        }
-    }
-}
+
 
 - (NSInteger)numberOfSectionsInCollectionView:(UICollectionView *)collectionView
 {
@@ -103,7 +64,7 @@
 
 - (NSInteger)collectionView:(UICollectionView *)collectionView numberOfItemsInSection:(NSInteger)section
 {
-    return (_showBookmarkedPages ? _bookmarkedPages.count : _document.pageCount);
+    return  _document.pageCount;
 }
 
 - (CGSize)collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout *)collectionViewLayout sizeForItemAtIndexPath:(NSIndexPath *)indexPath
@@ -114,12 +75,11 @@
 - (UICollectionViewCell *)collectionView:(UICollectionView *)collectionView cellForItemAtIndexPath:(NSIndexPath *)indexPath
 {
     PDFKBasicPDFViewerThumbsCollectionViewCell *cell = [self dequeueReusableCellWithReuseIdentifier:@"ThumbCell" forIndexPath:indexPath];
-    NSUInteger pageToDisplay = (_showBookmarkedPages ? ((NSNumber *)_bookmarkedPages[indexPath.row]).unsignedIntegerValue : indexPath.row + 1);
+    NSUInteger pageToDisplay = indexPath.row + 1;
     
     //Set the page number
     cell.pageNumberLabel.text = [NSString stringWithFormat:@"%li", (unsigned long)pageToDisplay];
-    //Show bookmarked
-    [cell showBookmark:[_document.bookmarks containsIndex:pageToDisplay]];
+
     //Load the thumb
     PDFKThumbRequest *request = [PDFKThumbRequest newForView:cell.thumbView fileURL:_document.fileURL password:_document.password guid:_document.guid page:pageToDisplay size:[self collectionView:self layout:self.collectionViewLayout sizeForItemAtIndexPath:indexPath]];
     UIImage *image = [[PDFKThumbCache sharedCache] thumbRequest:request priority:YES];
@@ -141,12 +101,7 @@
 
 - (void)collectionView:(UICollectionView *)collectionView didSelectItemAtIndexPath:(NSIndexPath *)indexPath
 {
-    if (!_showBookmarkedPages) {
         [self.pageDelegate thumbCollectionView:self didSelectPage:(indexPath.row + 1)];
-    } else {
-        NSInteger page = ((NSNumber *)_bookmarkedPages[indexPath.row]).integerValue;\
-        [self.pageDelegate thumbCollectionView:self didSelectPage:page];
-    }
 }
 
 @end
@@ -212,25 +167,9 @@
     [thumbConstraints addObjectsFromArray:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|[thumb]|" options:NSLayoutFormatAlignAllLeft metrics:nil views:@{@"superview": self, @"thumb": _thumbView}]];
     [self addConstraints:thumbConstraints];
     
-    //Add the bookmark view last so it is on top.
-    _bookmarkView = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, 13, 21)];
-    _bookmarkView.contentMode = UIViewContentModeTop;
-    _bookmarkView.translatesAutoresizingMaskIntoConstraints = NO;
-    [self addSubview:_bookmarkView];
-    
-    NSMutableArray *bookmarkConstraints = [[NSLayoutConstraint constraintsWithVisualFormat:@"H:[bookmark(13)]-5.0-|" options:NSLayoutFormatAlignAllBaseline metrics:nil views:@{@"superview": self, @"bookmark": _bookmarkView}] mutableCopy];
-    [bookmarkConstraints addObjectsFromArray:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|[bookmark(21)]" options:NSLayoutFormatAlignAllLeft metrics:nil views:@{@"superview": self, @"bookmark": _bookmarkView}]];
-    [self addConstraints:bookmarkConstraints];
 }
 
-- (void)showBookmark:(BOOL)show
-{
-    if (!show) {
-        _bookmarkView.image = nil;
-    } else {
-        _bookmarkView.image = [[UIImage imageNamed:@"Bookmarked"] imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate];
-    }
-}
+
 
 - (void)layoutSubviews
 {
@@ -242,7 +181,6 @@
     [super prepareForReuse];
     [_thumbView clearForReuse];
     _pageNumberLabel.text = nil;
-    _bookmarkView.image = nil;
 }
 
 @end
